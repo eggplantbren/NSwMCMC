@@ -32,14 +32,16 @@ for i in range(0, N):
 # Storage for results
 keep = np.empty((steps, num_params + 1))
 
+# Create figure
 plt.figure(figsize=(8, 8))
-plt.ion()
-plt.hold(False)
 
 # Main NS loop
 for i in range(0, steps):
+  # Clear the figure
+  plt.clf()
+
   # Find worst particle
-  worst = np.nonzero(logl == logl.min())[0]
+  worst = np.nonzero(logl == logl.min())[0][0]
 
   # Save its details
   keep[i, :-1] = particles[worst]
@@ -81,7 +83,7 @@ for i in range(0, steps):
   temp = keep[0:(i+1), -1].copy()
   if len(temp) >= 2:
     np.sort(temp)
-    plt.ylim([temp[0.2*len(temp)], temp[-1]])
+    plt.ylim([temp[int(0.2*len(temp))], temp[-1]])
   plt.ylabel('$\\log(L)$')
 
   plt.subplot(2,1,2)
@@ -91,10 +93,7 @@ for i in range(0, steps):
   plt.plot(logX, wt, 'bo-')
   plt.ylabel('Posterior weights (relative)')
   plt.xlabel('$\\log(X)$')
-  plt.draw()
-
-plt.ioff()
-plt.show()
+  plt.savefig("progress_plot.png", bbox_inches="tight")
 
 # Useful function
 def logsumexp(values):
