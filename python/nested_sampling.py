@@ -87,23 +87,25 @@ for i in range(0, steps):
   # Use the deterministic approximation
   logX = -(np.arange(0, i+1) + 1.)/N
 
-  plt.subplot(2,1,1)
-  plt.plot(logX, keep[0:(i+1), -1], "o-")
-  # Smart ylim
-  temp = keep[0:(i+1), -1].copy()
-  if len(temp) >= 2:
-    np.sort(temp)
-    plt.ylim([temp[int(0.2*len(temp))], temp[-1]])
-  plt.ylabel('$\\log(L)$')
+  # Make a plot, periodically
+  if (i+1) % N == 0:
+    plt.subplot(2,1,1)
+    plt.plot(logX, keep[0:(i+1), -1], "o-")
+    # Smart ylim
+    temp = keep[0:(i+1), -1].copy()
+    if len(temp) >= 2:
+      np.sort(temp)
+      plt.ylim([temp[int(0.2*len(temp))], temp[-1]])
+    plt.ylabel('$\\log(L)$')
 
-  plt.subplot(2,1,2)
-  # Rough posterior weights
-  logwt = logX.copy() + keep[0:(i+1), -1]
-  wt = np.exp(logwt - logwt.max())
-  plt.plot(logX, wt, "o-")
-  plt.ylabel('Posterior weights (relative)')
-  plt.xlabel('$\\log(X)$')
-  plt.savefig("progress_plot.png", bbox_inches="tight")
+    plt.subplot(2,1,2)
+    # Rough posterior weights
+    logwt = logX.copy() + keep[0:(i+1), -1]
+    wt = np.exp(logwt - logwt.max())
+    plt.plot(logX, wt, "o-")
+    plt.ylabel('Posterior weights (relative)')
+    plt.xlabel('$\\log(X)$')
+    plt.savefig("progress_plot.png", bbox_inches="tight")
 
 # Useful function
 def logsumexp(values):
