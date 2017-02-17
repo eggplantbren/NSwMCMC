@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import copy
 
 # Set the seed
-rng.seed(0)
+# rng.seed(0)
 
 # Import the model
 from transit_model import from_prior, log_prior, log_likelihood, proposal,\
@@ -14,7 +14,8 @@ from transit_model import from_prior, log_prior, log_likelihood, proposal,\
 N = 10
 
 # Number of NS iterations
-steps = N*30
+depth = 30.0
+steps = int(N*depth)
 
 # MCMC steps per NS iteration
 mcmc_steps = 1000
@@ -25,9 +26,10 @@ particles = []
 logp = np.empty(N)
 logl = np.empty(N)
 for i in range(0, N):
- x = from_prior()
- particles.append(x)
- logl[i] = log_likelihood(x)
+  x = from_prior()
+  particles.append(x)
+  logp[i] = log_prior(x)
+  logl[i] = log_likelihood(x)
 
 # Storage for results
 keep = np.empty((steps, num_params + 1))
@@ -46,6 +48,7 @@ for i in range(0, steps):
   # Save its details
   keep[i, :-1] = particles[worst]
   keep[i, -1] = logl[worst]
+  threshold = copy.deepcopy(logl[worst])
 
   # Copy survivor
   if N > 1:
@@ -53,32 +56,39 @@ for i in range(0, steps):
     while which == worst:
       which = rng.randint(N)
     particles[worst] = copy.deepcopy(particles[which])
-
-  threshold = copy.deepcopy(logl[worst])
+    logl[worst] = logl[which]
+    logp[worst] = logp[which]
 
   # Evolve within likelihood constraint using Metropolis
+  accepted = 0
   for j in range(0, mcmc_steps):
     new = proposal(particles[worst])
     logp_new = log_prior(new)
     # Only evaluate likelihood if prior prob isn't zero
+
     logl_new = -np.Inf
     if logp_new != -np.Inf:
       logl_new = log_likelihood(new)
     loga = logp_new - logp[worst]
-    if loga > 0.:
-      loga = 0.
+
+    if loga > 0.0:
+      loga = 0.0
 
     # Accept
     if logl_new >= threshold and rng.rand() <= np.exp(loga):
       particles[worst] = new
       logp[worst] = logp_new
       logl[worst] = logl_new
+      accepted += 1
+
+  print("NS iteration {it}. M-H acceptance rate = {a}/{m}."
+                .format(a=accepted, it=i+1, m=mcmc_steps))
 
   # Use the deterministic approximation
   logX = -(np.arange(0, i+1) + 1.)/N
 
   plt.subplot(2,1,1)
-  plt.plot(logX, keep[0:(i+1), -1], 'bo-')
+  plt.plot(logX, keep[0:(i+1), -1], "o-")
   # Smart ylim
   temp = keep[0:(i+1), -1].copy()
   if len(temp) >= 2:
@@ -90,7 +100,7 @@ for i in range(0, steps):
   # Rough posterior weights
   logwt = logX.copy() + keep[0:(i+1), -1]
   wt = np.exp(logwt - logwt.max())
-  plt.plot(logX, wt, 'bo-')
+  plt.plot(logX, wt, "o-")
   plt.ylabel('Posterior weights (relative)')
   plt.xlabel('$\\log(X)$')
   plt.savefig("progress_plot.png", bbox_inches="tight")
