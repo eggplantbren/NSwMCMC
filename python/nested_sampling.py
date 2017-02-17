@@ -11,13 +11,13 @@ from transit_model import from_prior, log_prior, log_likelihood, proposal,\
                               num_params
 
 # Number of particles
-N = 5
+N = 10
 
 # Number of NS iterations
-steps = 5*30
+steps = N*30
 
 # MCMC steps per NS iteration
-mcmc_steps = 10000
+mcmc_steps = 1000
 
 # Generate N particles from the prior
 # and calculate their log likelihoods

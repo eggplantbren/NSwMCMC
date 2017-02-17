@@ -1,6 +1,7 @@
+import copy
 import numpy as np
 import numpy.random as rng
-import copy
+from utils import randh
 
 # How many parameters are there?
 num_params = 4
@@ -70,7 +71,6 @@ def proposal(params):
 
   # Which one should we change?
   which = rng.randint(num_params)
-  new[which] += jump_sizes[which]*10.**(1.5 - 6.*rng.rand())*rng.randn()
+  new[which] += jump_sizes[which]*randh()
   return new
-
 
