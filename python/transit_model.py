@@ -2,6 +2,7 @@ import copy
 import numpy as np
 import numpy.random as rng
 from utils import randh
+from numba import jit
 
 # How many parameters are there?
 num_params = 4
@@ -17,6 +18,7 @@ N = data.shape[0] # Number of data points
 # Some idea of how big the Metropolis proposals should be
 jump_sizes = np.array([200., 10., t_range, t_range])
 
+@jit
 def from_prior():
   """
   A function to generate parameter values from the prior.
@@ -29,6 +31,7 @@ def from_prior():
 
   return np.array([A, b, tc, width])
 
+@jit
 def log_prior(params):
   """
   Evaluate the (log of the) prior distribution
@@ -47,6 +50,7 @@ def log_prior(params):
 
   return 0.
 
+@jit
 def log_likelihood(params):
   """
   Evaluate the (log of the) likelihood function
@@ -62,6 +66,7 @@ def log_likelihood(params):
   return -0.5*N*np.log(2.*np.pi) - np.sum(np.log(data[:,2])) \
             -0.5*np.sum((data[:,1] - mu)**2/data[:,2]**2)
 
+@jit
 def proposal(params):
   """
   Generate new values for the parameters, for the Metropolis algorithm.

@@ -2,6 +2,7 @@ import numpy as np
 import numpy.random as rng
 import matplotlib.pyplot as plt
 import copy
+from numba import jit
 
 # Set the seed
 # rng.seed(0)
@@ -37,6 +38,33 @@ keep = np.empty((steps, num_params + 1))
 # Create figure
 plt.figure(figsize=(8, 8))
 
+# Function that does MCMC
+@jit
+def do_mcmc(particle, logp, logl):
+  accepted = 0
+  for j in range(0, mcmc_steps):
+    new = proposal(particle)
+    logp_new = log_prior(new)
+    # Only evaluate likelihood if prior prob isn't zero
+
+    logl_new = -np.Inf
+    if logp_new != -np.Inf:
+      logl_new = log_likelihood(new)
+    loga = logp_new - logp
+
+    if loga > 0.0:
+      loga = 0.0
+
+    # Accept
+    if logl_new >= threshold and rng.rand() <= np.exp(loga):
+      particle = new
+      logp = logp_new
+      logl = logl_new
+      accepted += 1
+
+  return {"particle": particle, "logp": logp, "logl": logl, "accepted": accepted}
+
+
 # Main NS loop
 for i in range(0, steps):
   # Clear the figure
@@ -60,26 +88,11 @@ for i in range(0, steps):
     logp[worst] = logp[which]
 
   # Evolve within likelihood constraint using Metropolis
-  accepted = 0
-  for j in range(0, mcmc_steps):
-    new = proposal(particles[worst])
-    logp_new = log_prior(new)
-    # Only evaluate likelihood if prior prob isn't zero
-
-    logl_new = -np.Inf
-    if logp_new != -np.Inf:
-      logl_new = log_likelihood(new)
-    loga = logp_new - logp[worst]
-
-    if loga > 0.0:
-      loga = 0.0
-
-    # Accept
-    if logl_new >= threshold and rng.rand() <= np.exp(loga):
-      particles[worst] = new
-      logp[worst] = logp_new
-      logl[worst] = logl_new
-      accepted += 1
+  newpoint = do_mcmc(particles[worst], logp[worst], logl[worst])
+  particles[worst] = newpoint["particle"]
+  logp[worst] = newpoint["logp"]
+  logl[worst] = newpoint["logl"]
+  accepted = newpoint["accepted"]
 
   print("NS iteration {it}. M-H acceptance rate = {a}/{m}."
                 .format(a=accepted, it=i+1, m=mcmc_steps))
