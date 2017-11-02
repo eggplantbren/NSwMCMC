@@ -12,7 +12,7 @@ from transit_model import from_prior, log_prior, log_likelihood, proposal,\
                               num_params
 
 # Number of particles
-N = 10
+N = 100
 
 # Number of NS iterations
 depth = 30.0
@@ -162,6 +162,8 @@ while True:
 
   if k >= effective_sample_size:
     break
-# Save posterior samples
-np.savetxt('keep.txt', posterior_samples)
+
+# Save posterior samples and the rest
+np.savetxt("keep.txt", keep)
+np.savetxt("posterior_samples.txt", posterior_samples)
 
