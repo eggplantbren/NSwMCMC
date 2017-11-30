@@ -1,3 +1,4 @@
 *.pyc
 keep.txt
-
+posterior_samples.txt
+progress_plot.png
