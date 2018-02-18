@@ -32,35 +32,77 @@ keep = array(dim=c(steps, num_params+1))
 #plt.figure(figsize=(8, 8))
 
 ## Function that does MCMC
-#@jit
-#def do_mcmc(particle, logp, logl):
-#  accepted = 0
-#  for j in range(0, mcmc_steps):
-#    new = proposal(particle)
-#    logp_new = log_prior(new)
-#    # Only evaluate likelihood if prior prob isn't zero
+do_mcmc = function(particle, logp, logl)
+{
+    accepted = 0
 
-#    logl_new = -np.Inf
-#    if logp_new != -np.Inf:
-#      logl_new = log_likelihood(new)
-#    loga = logp_new - logp
+    for(j in 1:mcmc_steps)
+    {
+        # Generate proposal
+        new = proposal(particle)
+        logp_new = log_prior(new)
 
-#    if loga > 0.0:
-#      loga = 0.0
+        # Only evaluate likelihood if prior prob isn't zero
+        logl_new = Inf
+        if(logp_new != Inf)
+            logl_new = log_likelihood(new)
+        loga = logp_new - logp
+        if(loga > 0)
+            loga = 0
 
-#    # Accept
-#    if logl_new >= threshold and rng.rand() <= np.exp(loga):
-#      particle = new
-#      logp = logp_new
-#      logl = logl_new
-#      accepted += 1
 
-#  return {"particle": particle, "logp": logp, "logl": logl, "accepted": accepted}
+        # Accept
+        if(logl_new >= threshold && runif(1) <= exp(loga))
+        {
+            particle = new
+            logp = logp_new
+            logl = logl_new
+            accepted = accepted + 1
+        }
+
+    }
+
+    return(list(particle=particle, logp=logp, logl=logl, accepted=accepted))
+}
+
+
+
 
 
 # Main NS loop
 for(i in 1:steps)
 {
+    # Print message
+    cat(paste("Iteration", i, "\n"))
+
+    # Find worst particle
+    worst = which.min(logls)
+
+    # Save its details
+    keep[i, ] = c(particles[[worst]], logls[worst])
+    threshold = logls[worst]
+
+    # Copy a survivor
+    if(N > 1)
+    {
+        while(TRUE)
+        {
+            which = sample(1:N, 1)
+            if(which != worst)
+                break
+        }
+        particles[[worst]] = particles[[which]]
+        logps[worst] = logps[which]
+        logls[worst] = logls[which]
+    }
+
+
+    # Evolve within likelihood constraint using Metropolis
+    newpoint = do_mcmc(particles[[worst]], logps[worst], logls[worst])
+    particles[[worst]] = newpoint$particle
+    logps[worst] = newpoint$logp
+    logls[worst] = newpoint$logl
+    accepted = newpoint$accepted
 
 }
 
@@ -68,29 +110,10 @@ for(i in 1:steps)
 #  # Clear the figure
 #  plt.clf()
 
-#  # Find worst particle
-#  worst = np.nonzero(logl == logl.min())[0][0]
 
-#  # Save its details
-#  keep[i, :-1] = particles[worst]
-#  keep[i, -1] = logl[worst]
-#  threshold = copy.deepcopy(logl[worst])
 
-#  # Copy survivor
-#  if N > 1:
-#    which = rng.randint(N)
-#    while which == worst:
-#      which = rng.randint(N)
-#    particles[worst] = copy.deepcopy(particles[which])
-#    logl[worst] = logl[which]
-#    logp[worst] = logp[which]
 
-#  # Evolve within likelihood constraint using Metropolis
-#  newpoint = do_mcmc(particles[worst], logp[worst], logl[worst])
-#  particles[worst] = newpoint["particle"]
-#  logp[worst] = newpoint["logp"]
-#  logl[worst] = newpoint["logl"]
-#  accepted = newpoint["accepted"]
+
 
 #  print("NS iteration {it}. M-H acceptance rate = {a}/{m}."
 #                .format(a=accepted, it=i+1, m=mcmc_steps))
