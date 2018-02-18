@@ -28,7 +28,7 @@ for(i in 1:N)
 # Storage for results
 keep = array(dim=c(steps, num_params+1))
 
-## Function that does MCMC
+# Function that does MCMC
 do_mcmc = function(particle, logp, logl)
 {
     accepted = 0
@@ -40,8 +40,8 @@ do_mcmc = function(particle, logp, logl)
         logp_new = log_prior(new)
 
         # Only evaluate likelihood if prior prob isn't zero
-        logl_new = Inf
-        if(logp_new != Inf)
+        logl_new = -Inf
+        if(logp_new != -Inf)
             logl_new = log_likelihood(new)
         loga = logp_new - logp
         if(loga > 0)
