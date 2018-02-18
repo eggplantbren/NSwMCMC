@@ -73,7 +73,7 @@ do_mcmc = function(particle, logp, logl)
 for(i in 1:steps)
 {
     # Print message
-    cat(paste("Iteration", i, "\n"))
+    cat("Iteration ", i, ". ", sep="")
 
     # Find worst particle
     worst = which.min(logls)
@@ -81,6 +81,12 @@ for(i in 1:steps)
     # Save its details
     keep[i, ] = c(particles[[worst]], logls[worst])
     threshold = logls[worst]
+
+    # Check for termination
+    if(i == steps)
+        break
+
+    cat("Generating new particle...")
 
     # Copy a survivor
     if(N > 1)
@@ -96,7 +102,6 @@ for(i in 1:steps)
         logls[worst] = logls[which]
     }
 
-
     # Evolve within likelihood constraint using Metropolis
     newpoint = do_mcmc(particles[[worst]], logps[worst], logls[worst])
     particles[[worst]] = newpoint$particle
@@ -104,19 +109,27 @@ for(i in 1:steps)
     logls[worst] = newpoint$logl
     accepted = newpoint$accepted
 
+    cat("done. Accepted ", accepted, "/", mcmc_steps, " steps.\n", sep="")
+
+    # Make a plot
+    if(i %% N == 0)
+    {
+        logxs = -(1:i)/N
+
+        # Smart ylim
+        ylim = c()
+        temp = sort(keep[1:i, dim(keep)[2]])
+        if(length(temp) >= 2)
+        {
+            ylim[1] = temp[0.1*length(temp)]
+            ylim[2] = temp[length(temp)]
+        }
+
+        plot(logxs, keep[1:i, dim(keep)[2]],
+             type="b", xlab="ln(X)", ylab="ln(L)", ylim=ylim)
+    }
 }
 
-#for i in range(0, steps):
-#  # Clear the figure
-#  plt.clf()
-
-
-
-
-
-
-#  print("NS iteration {it}. M-H acceptance rate = {a}/{m}."
-#                .format(a=accepted, it=i+1, m=mcmc_steps))
 
 #  # Use the deterministic approximation
 #  logX = -(np.arange(0, i+1) + 1.)/N
