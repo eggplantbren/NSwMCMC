@@ -4,7 +4,7 @@
 source("model.R")
 
 # Number of particles
-N = 100
+N = 10
 
 # Number of NS iterations
 depth = 20.0
@@ -27,9 +27,6 @@ for(i in 1:N)
 
 # Storage for results
 keep = array(dim=c(steps, num_params+1))
-
-## Create figure
-#plt.figure(figsize=(8, 8))
 
 ## Function that does MCMC
 do_mcmc = function(particle, logp, logl)
@@ -93,7 +90,10 @@ for(i in 1:steps)
 
     # Check for termination
     if(i == steps)
+    {
+        cat("done.\n")
         break
+    }
 
     cat("Generating new particle...")
 
