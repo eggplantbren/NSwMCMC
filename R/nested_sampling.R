@@ -4,14 +4,14 @@
 source("model.R")
 
 # Number of particles
-N = 10
-
-# Number of NS iterations
-depth = 20.0
-steps = floor(N*depth)
+N = 50
 
 # MCMC steps per NS iteration
 mcmc_steps = 1000
+
+# Depth to go to
+depth = 20.0
+steps = floor(N*depth)  # Number of NS iterations
 
 # Generate N particles from the prior
 # and calculate their log likelihoods
@@ -145,69 +145,65 @@ for(i in 1:steps)
     }
 }
 
+# Prior weights
+logws = -(1:steps)/N
+logws = logws - logsumexp(logws)
 
-#  # Use the deterministic approximation
-#  logX = -(np.arange(0, i+1) + 1.)/N
+# Calculate marginal likelihood
+logZ = logsumexp(logws + keep[, dim(keep)[2]])
 
-#  # Make a plot, periodically
-#  if (i+1) % N == 0:
-#    plt.subplot(2,1,1)
-#    plt.plot(logX, keep[0:(i+1), -1], "o-")
-#    # Smart ylim
-#    temp = keep[0:(i+1), -1].copy()
-#    if len(temp) >= 2:
-#      np.sort(temp)
-#      plt.ylim([temp[int(0.2*len(temp))], temp[-1]])
-#    plt.ylabel('$\\log(L)$')
+# Normalised posterior weights
+post_weights = exp(logws + keep[, dim(keep)[2]] - logZ)
 
-#    plt.subplot(2,1,2)
-#    # Rough posterior weights
-#    logwt = logX.copy() + keep[0:(i+1), -1]
-#    wt = np.exp(logwt - logwt.max())
-#    plt.plot(logX, wt, "o-")
-#    plt.ylabel('Posterior weights (relative)')
-#    plt.xlabel('$\\log(X)$')
-#    plt.savefig("progress_plot.png", bbox_inches="tight")
+# ESS
+ent = -sum(post_weights*log(post_weights + 1E-300))
+ess = floor(exp(ent))
+
+# Information
+H = sum(post_weights*(keep[, dim(keep)[2]] - logZ))
+err = sqrt(H/N)
+
+# Print results
+cat("\n")
+cat("Marginal likelihood: logZ = ", logZ, " +- ", err, ".", sep="")
+cat("\n")
+cat("Information: H = ", H, " nats.", sep="")
+cat("\n")
+cat("Effective sample size = ", ess, ".", sep="")
+cat("\n")
+
+# Create posterior samples by resampling
+posterior_samples = array(dim=c(ess, dim(keep)[2]))
+
+# Counter
+k = 1
+top = max(post_weights)
+while(TRUE)
+{
+    # Choose one of the samples
+    which = sample(1:steps, 1)
+
+    # Acceptance probability
+    prob = post_weights[which]/top
+    if(runif(1) <= prob)
+    {
+        posterior_samples[k, ] = keep[which, ]
+        k = k + 1
+    }
+
+    # Check to see if we're done
+    if(k == ess + 1)
+        break
+}
+
+# Name the columns
+colnames(keep) = c(names(particles[[1]]), "log_likelihood")
+colnames(posterior_samples) = colnames(keep)
+
+# Save the output. Just posterior
+write.table(posterior_samples, file="posterior_samples.csv",
+            sep=",", row.names=FALSE, col.names=TRUE)
+cat("Posterior samples saved in posterior_samples.csv.\n")
 
 
-
-## Prior weights
-#logw = logX.copy()
-## Normalise them
-#logw -= logsumexp(logw)
-
-## Calculate marginal likelihood
-#logZ = logsumexp(logw + keep[:,-1])
-
-## Normalised posterior weights
-#wt = wt/wt.sum()
-
-#effective_sample_size = int(np.exp(-np.sum(wt*np.log(wt + 1E-300))))
-
-## Calculate information
-#H = np.sum(wt*(keep[:,-1] - logZ))
-
-#print('logZ = {logZ} +- {err}'.format(logZ=logZ, err=np.sqrt(H/N)))
-#print('Information = {H} nats'.format(H=H))
-#print('Effective Sample Size = {ess}'.format(ess=effective_sample_size))
-
-#posterior_samples = np.empty((effective_sample_size, keep.shape[1]))
-#k = 0
-#while True:
-#  # Choose one of the samples
-#  which = rng.randint(keep.shape[0])
-
-#  # Acceptance probability
-#  prob = wt[which]/wt.max()
-
-#  if rng.rand() <= prob:
-#    posterior_samples[k, :] = keep[which, :]
-#    k += 1
-
-#  if k >= effective_sample_size:
-#    break
-
-## Save posterior samples and the rest
-#np.savetxt("keep.txt", keep)
-#np.savetxt("posterior_samples.txt", posterior_samples)
 
