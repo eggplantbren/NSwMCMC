@@ -165,11 +165,11 @@ err = sqrt(H/N)
 
 # Print results
 cat("\n")
-cat("Marginal likelihood: logZ = ", logZ, " +- ", err, ".", sep="")
+cat("Marginal likelihood: ln(Z) = ", logZ, " +- ", err, ".", sep="")
 cat("\n")
 cat("Information: H = ", H, " nats.", sep="")
 cat("\n")
-cat("Effective sample size = ", ess, ".", sep="")
+cat("Effective posterior sample size = ", ess, ".", sep="")
 cat("\n")
 
 # Create posterior samples by resampling
