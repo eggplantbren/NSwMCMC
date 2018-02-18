@@ -7,7 +7,7 @@ source("model.R")
 N = 100
 
 # Number of NS iterations
-depth = 30.0
+depth = 20.0
 steps = floor(N*depth)
 
 # MCMC steps per NS iteration
@@ -66,6 +66,15 @@ do_mcmc = function(particle, logp, logl)
 }
 
 
+# Useful function
+logsumexp = function(xs)
+{
+    biggest = max(xs)
+    xs = xs - biggest
+    result = log(sum(exp(xs))) + biggest
+    return(result)
+}
+
 
 
 
@@ -115,6 +124,8 @@ for(i in 1:steps)
     if(i %% N == 0)
     {
         logxs = -(1:i)/N
+        logws = logxs + keep[1:i, dim(keep)[2]]
+        logws = logws - logsumexp(logws)
 
         # Smart ylim
         ylim = c()
@@ -125,8 +136,12 @@ for(i in 1:steps)
             ylim[2] = temp[length(temp)]
         }
 
+        # Get plot window ready
+        par(mfrow=c(2,1))
         plot(logxs, keep[1:i, dim(keep)[2]],
              type="b", xlab="ln(X)", ylab="ln(L)", ylim=ylim)
+        plot(logxs, exp(logws),
+             type="b", xlab="ln(X)", ylab="Posterior weight")
     }
 }
 
@@ -154,12 +169,7 @@ for(i in 1:steps)
 #    plt.xlabel('$\\log(X)$')
 #    plt.savefig("progress_plot.png", bbox_inches="tight")
 
-## Useful function
-#def logsumexp(values):
-#  biggest = np.max(values)
-#  x = values - biggest
-#  result = np.log(np.sum(np.exp(x))) + biggest
-#  return result
+
 
 ## Prior weights
 #logw = logX.copy()
