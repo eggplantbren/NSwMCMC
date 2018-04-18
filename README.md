@@ -1,12 +1,19 @@
-# NSwMCMC
-Minimal code to implement nested sampling with random walk MCMC moves to explore the likelihood-constrained prior
+NSwMCMC
+=======
 
-Aim: To produce a simple (i.e., easily human parse-able), robust implementation of nested sampling with MCMC moves as a benchmark for the second part of the open collaboration at https://astrostatistics.wordpress.com/nested-sampling/breaking-ns-breaking-smc/
+Nested Sampling with Markov Chain Monte Carlo.
+Simple implementations in Python and R.
 
-The script should follow the basic recipe seen in John Skilling's lighthouse example: http://www.inference.phy.cam.ac.uk/bayesys/r/lighthouse.r
-Namely, each replacement 'live particle' should be sought via random walk MCMC.
+(c) 2015 -- 2018 Brendon J. Brewer
 
-To facilitate the use of this script across multiple example applications the prior & likelihood should be treated as external functions.  Specifying the input and output requirements of these is the first task on the to-do list here! 
+This is free software released under the GNU General Public License v2.
 
-# python subdirectory
-Python code that does this. (c) 2015 Brendon J. Brewer.
+If you find this software useful, please cite:
+
+Bayesian Inference and Computation: A Beginner’s Guide
+Brendon J. Brewer, in Bayesian Astrophysics 26, 1, Cambridge University Press
+
+and also John Skilling's original NS article.
+
+
+
