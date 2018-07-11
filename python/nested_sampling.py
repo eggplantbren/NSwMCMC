@@ -39,7 +39,6 @@ keep = np.empty((steps, num_params + 1))
 plt.figure(figsize=(8, 8))
 
 # Function that does MCMC
-@jit
 def do_mcmc(particle, logp, logl):
   accepted = 0
   for j in range(0, mcmc_steps):
